@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { StatusBadge } from '@/components/StatusBadge';
-import { mockComplaints, ComplaintStatus } from '@/data/mockComplaints';
+import { useComplaints, Complaint as DbComplaint } from '@/hooks/useComplaints';
+import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,24 +12,50 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 
+type ComplaintStatus = 'new' | 'in_progress' | 'resolved';
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const { complaints: dbComplaints, loading } = useComplaints();
 
-  const categories = Array.from(new Set(mockComplaints.map(c => c.category)));
+  // Redirect students to student dashboard
+  useEffect(() => {
+    if (userRole && userRole === 'student') {
+      navigate('/student/dashboard');
+    }
+  }, [userRole, navigate]);
 
-  const filteredComplaints = mockComplaints.filter(complaint => {
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </Layout>
+    );
+  }
+
+  const complaints = dbComplaints.map((c: DbComplaint) => ({
+    ...c,
+    createdAt: new Date(c.created_at)
+  }));
+
+  const categories = Array.from(new Set(complaints.map(c => c.category)));
+
+  const filteredComplaints = complaints.filter(complaint => {
     const matchesSearch = 
-      complaint.ticketId.toLowerCase().includes(search.toLowerCase()) ||
+      complaint.ticket_id.toLowerCase().includes(search.toLowerCase()) ||
       complaint.title.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || complaint.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || complaint.category === categoryFilter;
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const activeCount = mockComplaints.filter(c => c.status !== 'resolved').length;
+  const activeCount = complaints.filter(c => c.status !== 'resolved').length;
 
   return (
     <Layout>
@@ -107,12 +134,12 @@ export default function AdminDashboard() {
                   onClick={() => navigate(`/admin/${complaint.id}`)}
                   className="cursor-pointer hover:bg-muted/50"
                 >
-                  <TableCell className="font-mono text-sm">{complaint.ticketId}</TableCell>
+                  <TableCell className="font-mono text-sm">{complaint.ticket_id}</TableCell>
                   <TableCell>
-                    {complaint.isAnonymous ? (
+                    {complaint.is_anonymous ? (
                       <Badge variant="outline">Anonymous</Badge>
                     ) : (
-                      complaint.studentName
+                      complaint.student_name
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{complaint.title}</TableCell>

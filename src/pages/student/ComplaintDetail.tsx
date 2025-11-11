@@ -5,26 +5,74 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { mockComplaints } from '@/data/mockComplaints';
-import { ArrowLeft, ThumbsUp, ThumbsDown, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, ThumbsUp, ThumbsDown, CheckCircle2, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+
+interface Complaint {
+  id: string;
+  ticket_id: string;
+  student_name: string | null;
+  title: string;
+  category: string;
+  description: string;
+  status: 'new' | 'in_progress' | 'resolved';
+  screenshot_url: string | null;
+  is_anonymous: boolean;
+  expected_resolution_time: string | null;
+  resolution_note: string | null;
+  internal_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function ComplaintDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [complaint, setComplaint] = useState<Complaint | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState<'up' | 'down' | null>(null);
 
-  const complaint = mockComplaints.find(c => c.id === id);
-
   useEffect(() => {
-    if (complaint?.status === 'resolved' && !sessionStorage.getItem(`seen-${id}`)) {
-      setShowConfetti(true);
-      sessionStorage.setItem(`seen-${id}`, 'true');
-      setTimeout(() => setShowConfetti(false), 1000);
+    if (id) {
+      fetchComplaint();
     }
-  }, [complaint, id]);
+  }, [id]);
+
+  const fetchComplaint = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setComplaint(data);
+      
+      if (data.status === 'resolved' && !sessionStorage.getItem(`seen-${id}`)) {
+        setShowConfetti(true);
+        sessionStorage.setItem(`seen-${id}`, 'true');
+        setTimeout(() => setShowConfetti(false), 1000);
+      }
+    } catch (error) {
+      console.error('Error fetching complaint:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!complaint) {
     return (
@@ -45,8 +93,8 @@ export default function ComplaintDetail() {
     { label: 'Resolved', status: complaint.status === 'resolved' ? 'completed' : 'pending', icon: CheckCircle2 }
   ];
 
-  const daysSinceResolution = complaint.status === 'resolved' && complaint.updatedAt
-    ? Math.floor((Date.now() - complaint.updatedAt.getTime()) / (1000 * 60 * 60 * 24))
+  const daysSinceResolution = complaint.status === 'resolved' && complaint.updated_at
+    ? Math.floor((Date.now() - new Date(complaint.updated_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
   return (
@@ -121,7 +169,7 @@ export default function ComplaintDetail() {
             ))}
           </div>
 
-          {complaint.status === 'in_progress' && complaint.expectedResolutionTime && (
+          {complaint.status === 'in_progress' && complaint.expected_resolution_time && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -130,7 +178,7 @@ export default function ComplaintDetail() {
               <p className="text-sm text-muted-foreground">
                 Expected by{' '}
                 <span className="font-medium text-primary">
-                  {format(complaint.expectedResolutionTime, 'MMM d, h:mm a')}
+                  {format(new Date(complaint.expected_resolution_time), 'MMM d, h:mm a')}
                 </span>
               </p>
             </motion.div>
@@ -151,8 +199,8 @@ export default function ComplaintDetail() {
               <p className="text-muted-foreground">
                 Glad we could help! Keep coding 💻
               </p>
-              {complaint.resolutionNote && (
-                <p className="mt-3 text-sm font-medium">{complaint.resolutionNote}</p>
+              {complaint.resolution_note && (
+                <p className="mt-3 text-sm font-medium">{complaint.resolution_note}</p>
               )}
             </Card>
           </motion.div>
@@ -168,7 +216,7 @@ export default function ComplaintDetail() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-                    {complaint.ticketId}
+                    {complaint.ticket_id}
                   </span>
                   <StatusBadge status={complaint.status} />
                 </div>
@@ -185,11 +233,11 @@ export default function ComplaintDetail() {
                 </p>
               </div>
 
-              {complaint.screenshotUrl && (
+              {complaint.screenshot_url && (
                 <div>
                   <h3 className="font-semibold mb-2">Screenshot</h3>
                   <img
-                    src={complaint.screenshotUrl}
+                    src={complaint.screenshot_url}
                     alt="Complaint screenshot"
                     className="w-full max-h-64 object-cover rounded-lg border border-border"
                   />
@@ -199,11 +247,11 @@ export default function ComplaintDetail() {
               <div className="flex items-center gap-6 text-sm text-muted-foreground pt-4 border-t border-border">
                 <div>
                   <span className="font-medium">Submitted:</span>{' '}
-                  {format(complaint.createdAt, 'MMM d, yyyy h:mm a')}
+                  {format(new Date(complaint.created_at), 'MMM d, yyyy h:mm a')}
                 </div>
-                {!complaint.isAnonymous && (
+                {!complaint.is_anonymous && (
                   <div>
-                    <span className="font-medium">Student:</span> {complaint.studentName}
+                    <span className="font-medium">Student:</span> {complaint.student_name}
                   </div>
                 )}
               </div>

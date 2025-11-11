@@ -1,19 +1,70 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { mockComplaints } from '@/data/mockComplaints';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 
+interface Complaint {
+  id: string;
+  ticket_id: string;
+  student_name: string | null;
+  title: string;
+  category: string;
+  description: string;
+  status: 'new' | 'in_progress' | 'resolved';
+  screenshot_url: string | null;
+  is_anonymous: boolean;
+  expected_resolution_time: string | null;
+  resolution_note: string | null;
+  internal_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function AdminComplaintDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [complaint, setComplaint] = useState<Complaint | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const complaint = mockComplaints.find(c => c.id === id);
+  useEffect(() => {
+    if (id) {
+      fetchComplaint();
+    }
+  }, [id]);
+
+  const fetchComplaint = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setComplaint(data);
+    } catch (error) {
+      console.error('Error fetching complaint:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!complaint) {
     return (
@@ -55,7 +106,7 @@ export default function AdminComplaintDetail() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-                    {complaint.ticketId}
+                    {complaint.ticket_id}
                   </span>
                   <StatusBadge status={complaint.status} />
                 </div>
@@ -72,11 +123,11 @@ export default function AdminComplaintDetail() {
                 </p>
               </div>
 
-              {complaint.screenshotUrl && (
+              {complaint.screenshot_url && (
                 <div>
                   <h3 className="font-semibold mb-2">Screenshot</h3>
                   <img
-                    src={complaint.screenshotUrl}
+                    src={complaint.screenshot_url}
                     alt="Complaint screenshot"
                     className="w-full max-h-64 object-cover rounded-lg border border-border"
                   />
@@ -86,15 +137,15 @@ export default function AdminComplaintDetail() {
               <div className="flex flex-col gap-2 text-sm text-muted-foreground pt-4 border-t border-border">
                 <div>
                   <span className="font-medium">Student:</span>{' '}
-                  {complaint.isAnonymous ? 'Anonymous' : complaint.studentName}
+                  {complaint.is_anonymous ? 'Anonymous' : complaint.student_name}
                 </div>
                 <div>
                   <span className="font-medium">Submitted:</span>{' '}
-                  {format(complaint.createdAt, 'MMM d, yyyy h:mm a')}
+                  {format(new Date(complaint.created_at), 'MMM d, yyyy h:mm a')}
                 </div>
                 <div>
                   <span className="font-medium">Last Updated:</span>{' '}
-                  {format(complaint.updatedAt, 'MMM d, yyyy h:mm a')}
+                  {format(new Date(complaint.updated_at), 'MMM d, yyyy h:mm a')}
                 </div>
               </div>
             </div>
@@ -110,21 +161,21 @@ export default function AdminComplaintDetail() {
                 </div>
               </div>
 
-              {complaint.internalNotes && (
+              {complaint.internal_notes && (
                 <div>
                   <span className="text-sm font-medium text-muted-foreground">Internal Notes:</span>
-                  <p className="mt-1 text-sm italic">{complaint.internalNotes}</p>
+                  <p className="mt-1 text-sm italic">{complaint.internal_notes}</p>
                 </div>
               )}
 
-              {complaint.resolutionNote && (
+              {complaint.resolution_note && (
                 <div>
                   <span className="text-sm font-medium text-muted-foreground">Resolution Summary:</span>
-                  <p className="mt-1 text-sm">{complaint.resolutionNote}</p>
+                  <p className="mt-1 text-sm">{complaint.resolution_note}</p>
                 </div>
               )}
 
-              {!complaint.resolutionNote && (
+              {!complaint.resolution_note && (
                 <p className="text-sm text-muted-foreground italic">
                   This is a demo view. In production, staff would see action buttons and assignment options here.
                 </p>

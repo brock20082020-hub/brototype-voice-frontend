@@ -1,26 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { ComplaintCard } from '@/components/ComplaintCard';
-import { mockComplaints } from '@/data/mockComplaints';
+import { useComplaints, Complaint as DbComplaint } from '@/hooks/useComplaints';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
+// Convert DB complaint to display format
+const convertComplaint = (c: DbComplaint) => ({
+  id: c.id,
+  ticketId: c.ticket_id,
+  studentName: c.student_name || 'Anonymous',
+  title: c.title,
+  category: c.category as any,
+  description: c.description,
+  status: c.status,
+  screenshotUrl: c.screenshot_url,
+  isAnonymous: c.is_anonymous,
+  createdAt: new Date(c.created_at),
+  updatedAt: new Date(c.updated_at),
+  expectedResolutionTime: c.expected_resolution_time ? new Date(c.expected_resolution_time) : undefined,
+  resolutionNote: c.resolution_note || undefined,
+  internalNotes: c.internal_notes || undefined,
+});
+
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
+  const { complaints: dbComplaints, loading } = useComplaints();
 
-  const activeComplaints = mockComplaints.filter(c => c.status !== 'resolved');
-  const allComplaints = [...mockComplaints].sort((a, b) => 
-    b.updatedAt.getTime() - a.updatedAt.getTime()
-  );
+  // Redirect staff/admin to admin dashboard
+  useEffect(() => {
+    if (userRole && (userRole === 'staff' || userRole === 'admin')) {
+      navigate('/admin/dashboard');
+    }
+  }, [userRole, navigate]);
+
+  const complaints = dbComplaints.map(convertComplaint);
+  const activeComplaints = complaints.filter(c => c.status !== 'resolved');
+  const allComplaints = complaints;
 
   const stats = {
     active: activeComplaints.length,
-    resolved: mockComplaints.filter(c => c.status === 'resolved').length
+    resolved: complaints.filter(c => c.status === 'resolved').length
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
