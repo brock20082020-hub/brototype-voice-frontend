@@ -3,6 +3,7 @@ import { Layout } from '@/components/Layout';
 import { ComplaintCard } from '@/components/ComplaintCard';
 import { useComplaints, Complaint as DbComplaint } from '@/hooks/useComplaints';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, MessageSquare } from 'lucide-react';
@@ -27,11 +28,37 @@ const convertComplaint = (c: DbComplaint) => ({
   internalNotes: c.internal_notes || undefined,
 });
 
+// Helper to get time-based greeting
+const getTimeBasedGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
   const [activeTab, setActiveTab] = useState('active');
+  const [userName, setUserName] = useState<string>('');
   const { complaints: dbComplaints, loading } = useComplaints();
+
+  // Fetch user profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (data?.full_name) {
+        setUserName(data.full_name.split(' ')[0]); // First name only
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   // Redirect staff/admin to admin dashboard
   useEffect(() => {
@@ -143,6 +170,8 @@ export default function Dashboard() {
   }
 
   // Regular dashboard for existing users
+  const greeting = `${getTimeBasedGreeting()}, ${userName || 'there'}`;
+  
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
@@ -152,7 +181,7 @@ export default function Dashboard() {
           className="mb-8 text-center"
         >
           <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Your Voice, Heard 💬
+            {greeting} 👋
           </h1>
           <p className="text-muted-foreground text-lg">
             Track, resolve, and keep coding.

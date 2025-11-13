@@ -3,6 +3,7 @@ import { Layout } from '@/components/Layout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useComplaints, Complaint as DbComplaint } from '@/hooks/useComplaints';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,11 +17,29 @@ type ComplaintStatus = 'new' | 'in_progress' | 'resolved';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ComplaintStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [userName, setUserName] = useState<string>('');
   const { complaints: dbComplaints, loading } = useComplaints();
+
+  // Fetch user profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (data?.full_name) {
+        setUserName(data.full_name);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   // Redirect students to student dashboard
   useEffect(() => {
@@ -57,6 +76,8 @@ export default function AdminDashboard() {
 
   const activeCount = complaints.filter(c => c.status !== 'resolved').length;
 
+  const greeting = userName ? `Welcome back, ${userName}` : 'Welcome back';
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">
@@ -65,7 +86,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold mb-2">Support Inbox</h1>
+          <h1 className="text-3xl font-bold mb-2">{greeting} 👋</h1>
           <p className="text-muted-foreground">
             <span className="font-semibold text-warning">{activeCount}</span> Active Complaints
           </p>

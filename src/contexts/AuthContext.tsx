@@ -103,15 +103,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (profileError) throw profileError;
 
-      // Assign role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: role
-        });
+      // Role is now assigned automatically by trigger
+      // Only update if non-student role is needed
+      if (role !== 'student') {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .update({ role })
+          .eq('user_id', authData.user.id);
 
-      if (roleError) throw roleError;
+        if (roleError) throw roleError;
+      }
 
       return { error: null };
     } catch (error) {
