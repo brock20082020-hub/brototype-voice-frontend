@@ -184,6 +184,6 @@ export default function AdminComplaintDetail() {
           </Card>
         </motion.div>
       </div>
-    </Layout>
+    </StaffLayout>
   );
 }
