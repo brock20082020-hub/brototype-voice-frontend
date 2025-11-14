@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { StudentSidebar } from '@/components/StudentSidebar';
 import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +33,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -44,12 +46,15 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, avatar_url')
         .eq('id', user.id)
         .single();
       
       if (data?.full_name) {
         setUserName(data.full_name.split(' ')[0]);
+      }
+      if (data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
       }
     };
     fetchProfile();
@@ -99,12 +104,24 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
-                    <User className="w-5 h-5" />
+                  <Button variant="ghost" className="rounded-full hover:bg-muted h-10 w-10 p-0">
+                    <Avatar>
+                      <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
+                      <AvatarFallback>
+                        {userName ? userName.charAt(0).toUpperCase() : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-popover">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/student/profile')}>
+                    Edit Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/student/dashboard')}>
+                    Dashboard
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                     Logout
