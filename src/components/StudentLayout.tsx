@@ -46,15 +46,12 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       if (!user) return;
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, avatar_url')
+        .select('full_name')
         .eq('id', user.id)
         .single();
       
       if (data?.full_name) {
         setUserName(data.full_name.split(' ')[0]);
-      }
-      if (data?.avatar_url) {
-        setAvatarUrl(data.avatar_url);
       }
     };
     fetchProfile();
@@ -116,9 +113,6 @@ export function StudentLayout({ children }: StudentLayoutProps) {
                 <DropdownMenuContent align="end" className="w-48 bg-popover">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/student/profile')}>
-                    Edit Profile
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/student/dashboard')}>
                     Dashboard
                   </DropdownMenuItem>
