@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/Layout';
+import { StaffLayout } from '@/components/StaffLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,29 +58,29 @@ export default function AdminComplaintDetail() {
 
   if (loading) {
     return (
-      <Layout>
+      <StaffLayout>
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
-      </Layout>
+      </StaffLayout>
     );
   }
 
   if (!complaint) {
     return (
-      <Layout>
+      <StaffLayout>
         <div className="text-center py-16">
           <h2 className="text-2xl font-bold mb-4">Complaint not found</h2>
           <Button onClick={() => navigate('/admin/dashboard')}>
             Back to Dashboard
           </Button>
         </div>
-      </Layout>
+      </StaffLayout>
     );
   }
 
   return (
-    <Layout>
+    <StaffLayout>
       <div className="max-w-3xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

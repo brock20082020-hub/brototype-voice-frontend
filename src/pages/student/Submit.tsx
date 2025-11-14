@@ -267,6 +267,6 @@ export default function Submit() {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
+    </StudentLayout>
   );
 }
