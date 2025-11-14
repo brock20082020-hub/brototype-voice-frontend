@@ -5,30 +5,8 @@ import { Bell, AlertCircle, UserPlus, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function StaffNotifications() {
-  // Mock notifications - in production, fetch from database
-  const notifications = [
-    {
-      id: 1,
-      type: 'assigned',
-      message: 'You have been assigned complaint #BRO-D5F8 (Technical).',
-      time: '30 minutes ago',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'comment',
-      message: 'Student Ramesh added a comment to complaint #BRO-E2A9.',
-      time: '2 hours ago',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'new',
-      message: 'New complaint submitted in Technical category.',
-      time: '4 hours ago',
-      read: true
-    },
-  ];
+  // Empty notifications for new users - will be populated from database
+  const notifications: any[] = [];
 
   const getIcon = (type: string) => {
     switch (type) {

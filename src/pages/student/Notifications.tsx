@@ -5,30 +5,8 @@ import { Bell, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function StudentNotifications() {
-  // Mock notifications - in production, fetch from database
-  const notifications = [
-    {
-      id: 1,
-      type: 'resolved',
-      message: 'Your complaint #BRO-A3F2 has been marked as Resolved.',
-      time: '2 hours ago',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'update',
-      message: 'Staff replied to your complaint #BRO-B7E1.',
-      time: '5 hours ago',
-      read: false
-    },
-    {
-      id: 3,
-      type: 'status',
-      message: 'Your complaint #BRO-C9D4 status changed to In Progress.',
-      time: '1 day ago',
-      read: true
-    },
-  ];
+  // Empty notifications for new users - will be populated from database
+  const notifications: any[] = [];
 
   const getIcon = (type: string) => {
     switch (type) {
