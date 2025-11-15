@@ -23,10 +23,10 @@ interface StaffLayoutProps {
 
 export function StaffLayout({ children }: StaffLayoutProps) {
   const { theme, toggleTheme } = useTheme();
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, userRole } = useAuth();
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -37,6 +37,8 @@ export function StaffLayout({ children }: StaffLayoutProps) {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
+      setUserEmail(user.email || '');
+      
       const { data } = await supabase
         .from('profiles')
         .select('full_name')
@@ -49,6 +51,13 @@ export function StaffLayout({ children }: StaffLayoutProps) {
     };
     fetchProfile();
   }, [user]);
+
+  // Redirect students to student dashboard
+  useEffect(() => {
+    if (userRole && userRole === 'student') {
+      navigate('/student/dashboard');
+    }
+  }, [userRole, navigate]);
 
   if (loading) {
     return (
@@ -96,7 +105,6 @@ export function StaffLayout({ children }: StaffLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full hover:bg-muted h-10 w-10 p-0">
                     <Avatar>
-                      <AvatarImage src={avatarUrl || ''} alt="Profile picture" />
                       <AvatarFallback>
                         {userName ? userName.charAt(0).toUpperCase() : 'U'}
                       </AvatarFallback>

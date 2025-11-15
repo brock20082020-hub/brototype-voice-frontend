@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Moon, Sun, GraduationCap, Users, AlertCircle } from 'lucide-react';
+import { Moon, Sun, GraduationCap, Users, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 type UserRole = 'student' | 'staff' | 'admin';
 
@@ -25,6 +26,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +44,23 @@ export default function Auth() {
       } else {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        // Navigation will be handled by the auth state change with a small delay
-        setTimeout(() => {
-          // Role will be fetched by AuthContext, navigate based on roleTab for now
-          // This will be updated by the actual role check in the dashboard
-          navigate('/student/dashboard');
-        }, 500);
+        
+        // Fetch user role to redirect to correct dashboard
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (roleData) {
+            const role = roleData.role as UserRole;
+            setTimeout(() => {
+              navigate(role === 'student' ? '/student/dashboard' : '/admin/dashboard');
+            }, 500);
+          }
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -148,15 +161,32 @@ export default function Auth() {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
