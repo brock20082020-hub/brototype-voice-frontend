@@ -118,6 +118,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_role_with_verification: {
+        Args: {
+          _requested_role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+          _verification_code?: string
+        }
+        Returns: boolean
+      }
       generate_ticket_id: { Args: never; Returns: string }
       has_role: {
         Args: {

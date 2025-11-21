@@ -1,4 +1,4 @@
-import { Home, Inbox, CheckCircle, Bell, LogOut } from 'lucide-react';
+import { Home, Inbox, CheckCircle, Bell, LogOut, Users } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -13,12 +13,19 @@ export function StaffSidebar() {
     navigate('/auth');
   };
 
+  const { userRole } = useAuth();
+  
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Inbox, label: 'Assigned Complaints', path: '/admin/assigned' },
     { icon: CheckCircle, label: 'Resolved Complaints', path: '/admin/resolved' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
   ];
+
+  // Add Manage Users only for admins
+  if (userRole === 'admin') {
+    menuItems.push({ icon: Users, label: 'Manage Users', path: '/admin/manage-users' });
+  }
 
   return (
     <aside className="w-64 min-h-screen bg-card border-r border-border">

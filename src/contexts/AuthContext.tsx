@@ -10,7 +10,7 @@ interface AuthContextType {
   session: Session | null;
   userRole: UserRole | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role: UserRole, verificationCode?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
+  const signUp = async (email: string, password: string, fullName: string, role: UserRole, verificationCode?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -85,7 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName
+            full_name: fullName,
+            requested_role: role,
+            verification_code: verificationCode
           }
         }
       });
@@ -103,16 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (profileError) throw profileError;
 
-      // Role is now assigned automatically by trigger
-      // Only update if non-student role is needed
-      if (role !== 'student') {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .update({ role })
-          .eq('user_id', authData.user.id);
-
-        if (roleError) throw roleError;
-      }
+      // Role is now assigned automatically by trigger based on metadata
+      // No need to update manually
 
       return { error: null };
     } catch (error) {

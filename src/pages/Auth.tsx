@@ -24,6 +24,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +36,7 @@ export default function Auth() {
 
     try {
       if (mode === 'signup') {
-        const { error } = await signUp(email, password, fullName, roleTab);
+        const { error } = await signUp(email, password, fullName, roleTab, verificationCode || undefined);
         if (error) throw error;
         // Wait a bit for the role to be set
         setTimeout(() => {
@@ -144,6 +145,25 @@ export default function Auth() {
                   onChange={(e) => setFullName(e.target.value)}
                   required
                 />
+              </div>
+            )}
+
+            {mode === 'signup' && roleTab === 'staff' && (
+              <div className="space-y-2">
+                <Label htmlFor="verificationCode">
+                  Staff Verification Code <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="verificationCode"
+                  type="text"
+                  placeholder="Enter staff verification code"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Contact admin for the staff verification code
+                </p>
               </div>
             )}
 
