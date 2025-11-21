@@ -16,6 +16,7 @@ import AssignedComplaints from "./pages/admin/AssignedComplaints";
 import ResolvedComplaints from "./pages/admin/ResolvedComplaints";
 import AdminNotifications from "./pages/admin/Notifications";
 import AdminComplaintDetail from "./pages/admin/ComplaintDetail";
+import ManageUsers from "./pages/admin/ManageUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/admin/assigned" element={<AssignedComplaints />} />
               <Route path="/admin/resolved" element={<ResolvedComplaints />} />
               <Route path="/admin/notifications" element={<AdminNotifications />} />
+              <Route path="/admin/manage-users" element={<ManageUsers />} />
               <Route path="/admin/:id" element={<AdminComplaintDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
