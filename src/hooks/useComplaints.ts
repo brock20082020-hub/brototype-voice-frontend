@@ -57,6 +57,27 @@ export function useComplaints() {
 
   useEffect(() => {
     fetchComplaints();
+
+    // Subscribe to real-time updates for complaints
+    const channel = supabase
+      .channel('complaints-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'complaints',
+        },
+        (payload) => {
+          console.log('Complaint change:', payload);
+          fetchComplaints();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, userRole]);
 
   return { complaints, loading, error, refetch: fetchComplaints };
