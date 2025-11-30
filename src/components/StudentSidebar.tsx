@@ -1,4 +1,4 @@
-import { Home, FileText, List, Bell, LogOut } from 'lucide-react';
+import { Home, FileText, List, Bell, LogOut, User } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +18,7 @@ export function StudentSidebar() {
     { icon: FileText, label: 'Raise Complaint', path: '/student/submit' },
     { icon: List, label: 'My Complaints', path: '/student/complaints' },
     { icon: Bell, label: 'Notifications', path: '/student/notifications' },
+    { icon: User, label: 'Profile', path: '/student/profile' },
   ];
 
   return (
