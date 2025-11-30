@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { Moon, Sun, User, Bell } from 'lucide-react';
+import { Moon, Sun, User } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { StudentSidebar } from '@/components/StudentSidebar';
 import { supabase } from '@/integrations/supabase/client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { NotificationBell } from '@/components/NotificationBell';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,14 +100,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             </motion.div>
 
             <div className="flex items-center space-x-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/student/notifications')}
-                className="rounded-full hover:bg-muted transition-colors relative"
-              >
-                <Bell className="w-5 h-5" />
-              </Button>
+              <NotificationBell />
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

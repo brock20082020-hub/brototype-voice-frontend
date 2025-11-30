@@ -5,10 +5,14 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface Complaint {
   id: string;
@@ -30,8 +34,13 @@ interface Complaint {
 export default function AdminComplaintDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [complaint, setComplaint] = useState<Complaint | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [status, setStatus] = useState<'new' | 'in_progress' | 'resolved'>('new');
+  const [internalNotes, setInternalNotes] = useState('');
+  const [resolutionNote, setResolutionNote] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -49,10 +58,47 @@ export default function AdminComplaintDetail() {
 
       if (error) throw error;
       setComplaint(data);
+      setStatus(data.status);
+      setInternalNotes(data.internal_notes || '');
+      setResolutionNote(data.resolution_note || '');
     } catch (error) {
       console.error('Error fetching complaint:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateComplaint = async () => {
+    if (!complaint) return;
+    
+    setUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('complaints')
+        .update({
+          status,
+          internal_notes: internalNotes,
+          resolution_note: resolutionNote,
+        })
+        .eq('id', complaint.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Complaint updated successfully',
+      });
+
+      // Refresh complaint data
+      await fetchComplaint();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update complaint',
+        variant: 'destructive',
+      });
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -151,35 +197,53 @@ export default function AdminComplaintDetail() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-muted/50">
-            <h2 className="text-lg font-semibold mb-4">Admin Panel (Demo)</h2>
-            <div className="space-y-4">
-              <div>
-                <span className="text-sm font-medium text-muted-foreground">Status:</span>
-                <div className="mt-1">
-                  <StatusBadge status={complaint.status} />
-                </div>
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-6">Staff Actions</h2>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="status">Update Status</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+                  <SelectTrigger id="status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {complaint.internal_notes && (
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Internal Notes:</span>
-                  <p className="mt-1 text-sm italic">{complaint.internal_notes}</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="internalNotes">Internal Notes (Staff Only)</Label>
+                <Textarea
+                  id="internalNotes"
+                  placeholder="Add notes for other staff members..."
+                  value={internalNotes}
+                  onChange={(e) => setInternalNotes(e.target.value)}
+                  rows={4}
+                />
+              </div>
 
-              {complaint.resolution_note && (
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Resolution Summary:</span>
-                  <p className="mt-1 text-sm">{complaint.resolution_note}</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="resolutionNote">Resolution Summary (Visible to Student)</Label>
+                <Textarea
+                  id="resolutionNote"
+                  placeholder="Describe how the issue was resolved..."
+                  value={resolutionNote}
+                  onChange={(e) => setResolutionNote(e.target.value)}
+                  rows={4}
+                />
+              </div>
 
-              {!complaint.resolution_note && (
-                <p className="text-sm text-muted-foreground italic">
-                  This is a demo view. In production, staff would see action buttons and assignment options here.
-                </p>
-              )}
+              <Button 
+                onClick={handleUpdateComplaint} 
+                disabled={updating}
+                className="w-full"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {updating ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
           </Card>
         </motion.div>

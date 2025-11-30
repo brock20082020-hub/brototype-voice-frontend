@@ -18,11 +18,13 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["complaint_category"]
           created_at: string
+          department: string | null
           description: string
           expected_resolution_time: string | null
           id: string
           internal_notes: string | null
           is_anonymous: boolean
+          priority: string | null
           resolution_note: string | null
           screenshot_url: string | null
           status: Database["public"]["Enums"]["complaint_status"]
@@ -35,11 +37,13 @@ export type Database = {
         Insert: {
           category: Database["public"]["Enums"]["complaint_category"]
           created_at?: string
+          department?: string | null
           description: string
           expected_resolution_time?: string | null
           id?: string
           internal_notes?: string | null
           is_anonymous?: boolean
+          priority?: string | null
           resolution_note?: string | null
           screenshot_url?: string | null
           status?: Database["public"]["Enums"]["complaint_status"]
@@ -52,11 +56,13 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["complaint_category"]
           created_at?: string
+          department?: string | null
           description?: string
           expected_resolution_time?: string | null
           id?: string
           internal_notes?: string | null
           is_anonymous?: boolean
+          priority?: string | null
           resolution_note?: string | null
           screenshot_url?: string | null
           status?: Database["public"]["Enums"]["complaint_status"]
@@ -67,6 +73,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          complaint_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          complaint_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          complaint_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_complaint_id_fkey"
+            columns: ["complaint_id"]
+            isOneToOne: false
+            referencedRelation: "complaints"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

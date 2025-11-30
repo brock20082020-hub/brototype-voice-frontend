@@ -161,9 +161,12 @@ export default function Auth() {
                   onChange={(e) => setVerificationCode(e.target.value)}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  Contact admin for the staff verification code
-                </p>
+                <div className="mt-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                  <p className="text-xs font-medium text-primary mb-1">
+                    Default Staff Verification Code:
+                  </p>
+                  <code className="text-sm font-mono font-bold text-primary">STAFF2024</code>
+                </div>
               </div>
             )}
 
