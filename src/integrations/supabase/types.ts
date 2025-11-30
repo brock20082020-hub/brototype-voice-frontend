@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       complaints: {
         Row: {
+          assigned_to: string | null
           category: Database["public"]["Enums"]["complaint_category"]
           created_at: string
           department: string | null
@@ -35,6 +36,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
           category: Database["public"]["Enums"]["complaint_category"]
           created_at?: string
           department?: string | null
@@ -54,6 +56,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
           category?: Database["public"]["Enums"]["complaint_category"]
           created_at?: string
           department?: string | null

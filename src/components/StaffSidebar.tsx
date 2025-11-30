@@ -1,4 +1,4 @@
-import { Home, Inbox, CheckCircle, Bell, LogOut, Users, BarChart3 } from 'lucide-react';
+import { Home, Inbox, CheckCircle, Bell, LogOut, Users, BarChart3, User } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,7 @@ export function StaffSidebar() {
     { icon: CheckCircle, label: 'Resolved Complaints', path: '/admin/resolved' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
+    { icon: User, label: 'Profile', path: '/admin/profile' },
   ];
 
   // Add Manage Users only for admins
